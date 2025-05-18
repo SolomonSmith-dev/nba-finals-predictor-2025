@@ -1,0 +1,26 @@
+# === Python Artifacts ===
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+
+# === Environment ===
+venv/
+.env
+.env.*
+
+# === VSCode ===
+.vscode/
+
+# === Data & Output ===
+data/raw/
+data/processed/
+*.csv
+*.png
+
+# === Jupyter ===
+.ipynb_checkpoints/
+
+# === Mac System Files ===
+.DS_Store
