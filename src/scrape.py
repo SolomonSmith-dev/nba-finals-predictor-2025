@@ -3,9 +3,8 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-
 def scrape_2025_team_stats() -> pd.DataFrame:
-    """Scrape 2025 regular season team-level stats from Basketball Reference."""
+    """Scrape 2025 regular season team per-game stats from Basketball Reference."""
     url = "https://www.basketball-reference.com/leagues/NBA_2025.html"
     response = requests.get(url)
     
@@ -14,19 +13,16 @@ def scrape_2025_team_stats() -> pd.DataFrame:
     
     soup = BeautifulSoup(response.content, "lxml")
 
-    # Get Miscellaneous stats table
-    misc_table = soup.find("table", {"id": "misc_stats"})
-    if not misc_table:
-        raise Exception("Could not find miscellaneous stats table on the page.")
+    # Use the per-game team stats table (more reliable)
+    per_game_table = soup.find("table", {"id": "per_game-team"})
+    if not per_game_table:
+        raise Exception("Could not find per-game team stats table on the page.")
 
-    df_misc = pd.read_html(str(misc_table))[0]
+    df = pd.read_html(str(per_game_table))[0]
+    df = df[df["Team"] != "League Average"]
+    df["Team"] = df["Team"].str.replace(r"\*", "", regex=True)
 
-    # Clean and format
-    df_misc = df_misc[df_misc["Team"] != "League Average"]
-    df_misc["Team"] = df_misc["Team"].str.replace(r"\*", "", regex=True)
-
-    return df_misc
-
+    return df
 
 def scrape_2025_playoffs() -> pd.DataFrame:
     """Scrape current 2025 NBA playoff matchups and results."""

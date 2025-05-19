@@ -1,9 +1,8 @@
 import pandas as pd
 
-# These are the 4 teams left in the playoffs
 FINAL_FOUR = ["Indiana Pacers", "New York Knicks", "Oklahoma City Thunder", "Minnesota Timberwolves"]
 
-# Mapping to match Basketball-Reference abbreviations if needed
+# Map shortened names to full names if necessary
 TEAM_NAME_FIXES = {
     "Indiana": "Indiana Pacers",
     "New York": "New York Knicks",
@@ -11,24 +10,44 @@ TEAM_NAME_FIXES = {
     "Minnesota": "Minnesota Timberwolves"
 }
 
-def load_and_filter_team_stats(stats_path: str):
-    """Load team stats, filter for final 4 teams, and clean up."""
+def load_and_filter_team_stats(stats_path: str) -> pd.DataFrame:
+    """Load per-game stats, filter for final 4 teams, and rename columns."""
     df = pd.read_csv(stats_path)
 
     # Clean team names
     df["Team"] = df["Team"].str.strip()
     df["Team"] = df["Team"].replace(TEAM_NAME_FIXES)
 
-    # Filter only for final 4
+    # Filter for final 4
     filtered = df[df["Team"].isin(FINAL_FOUR)].copy()
 
-    # Select useful features
-    columns_to_keep = ["Team", "W", "L", "W/L%", "ORtg", "DRtg", "NetRtg", "Pace"]
+    print("📊 Columns available:")
+    print(filtered.columns.tolist())
+
+    # Rename only columns we have
+    filtered = filtered.rename(columns={
+        "PTS": "PointsPerGame",
+        "FG%": "FieldGoalPct"
+    })
+
+    # Add mock WinPct values manually
+    win_pct_map = {
+        "Indiana Pacers": 0.57,
+        "New York Knicks": 0.61,
+        "Oklahoma City Thunder": 0.69,
+        "Minnesota Timberwolves": 0.68
+    }
+    filtered["WinPct"] = filtered["Team"].map(win_pct_map)
+
+    # Select only columns we now have
+    columns_to_keep = ["Team", "WinPct", "PointsPerGame", "FieldGoalPct"]
     filtered = filtered[columns_to_keep]
+
     return filtered
 
-def add_manual_seed_info(df: pd.DataFrame):
-    """Manually add seed info (we could scrape this later too)."""
+
+def add_manual_seed_info(df: pd.DataFrame) -> pd.DataFrame:
+    """Manually add seed info for the 2025 playoffs."""
     seed_map = {
         "Indiana Pacers": 6,
         "New York Knicks": 2,
@@ -39,7 +58,6 @@ def add_manual_seed_info(df: pd.DataFrame):
     return df
 
 def preprocess_team_data(stats_path: str) -> pd.DataFrame:
-    """Full preprocessing pipeline for 2025 team data."""
     df = load_and_filter_team_stats(stats_path)
     df = add_manual_seed_info(df)
     return df
